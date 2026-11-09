@@ -92,7 +92,7 @@ export function UpdateScriptModuleDiagnostics(asmodule : scriptfiles.ASModule, i
         return;
 
     // If no diagnostics have changed, and we don't have any compiletime ones, don't send
-    if (oldDiagnostics && AreDiagnosticsEqual(oldDiagnostics, diagnostics))
+    if (!alwaysSend && oldDiagnostics && AreDiagnosticsEqual(oldDiagnostics, diagnostics))
     {
         if (!HasCompileDiagnostics(asmodule))
             return;
