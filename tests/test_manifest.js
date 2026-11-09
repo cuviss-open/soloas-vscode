@@ -4,7 +4,7 @@ const current = require('../package.json');
 const upstream = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const a = current.contributes, b = upstream.contributes;
 assert.strictEqual(`${current.publisher}.${current.name}`, 'cuviss.soloas');
-assert.strictEqual(current.version, '0.2.0');
+assert.strictEqual(current.version, '0.2.1');
 assert.strictEqual(a.configurationDefaults['files.associations']['*.as'], 'soloas-angelscript');
 assert.ok(a.languages.some(x => x.id === 'soloas-angelscript'));
 const language = a.languages.find(x => x.id === 'soloas-angelscript');

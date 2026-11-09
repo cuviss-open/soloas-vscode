@@ -2,7 +2,7 @@
     "name": "soloas",
     "displayName": "soloAS",
     "description": "soloAS（Unreal Engine AngelScript）编辑与调试扩展，基于 Hazelight 维护的 UE-AS 官方扩展。 Editing and debugging for soloAS, based on the official UE-AS extension maintained by Hazelight.",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "publisher": "cuviss",
     "icon": "brand/soloas-icon-128.png",
     "engines": {
