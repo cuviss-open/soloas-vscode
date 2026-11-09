@@ -17,11 +17,16 @@ jobs:
       - run: npm install
       - run: npm run build
       - run: npm test
-      - run: npx --yes @vscode/vsce@4.0.2 package --no-dependencies
-      - run: npx --yes @vscode/vsce@4.0.2 publish --oidc --packagePath soloas-0.2.0.vsix
-      - run: npx --yes ovsx publish soloas-0.2.0.vsix -p "$OVSX_PAT"
+      - id: pkg
+        run: |
+          VSIX="soloas-$(node -p "require('./package.json').version").vsix"
+          test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+          npx --yes @vscode/vsce@4.1.0 package --no-dependencies --out "$VSIX"
+          echo "vsix=$VSIX" >> "$GITHUB_OUTPUT"
+      - run: npx --yes @vscode/vsce@4.1.0 publish --oidc --packagePath "${{ steps.pkg.outputs.vsix }}"
+      - run: npx --yes ovsx@1.4.0 publish "${{ steps.pkg.outputs.vsix }}" -p "$OVSX_PAT"
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
-      - run: gh release create "$GITHUB_REF_NAME" soloas-0.2.0.vsix --generate-notes
+      - run: gh release create "$GITHUB_REF_NAME" "${{ steps.pkg.outputs.vsix }}" --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
