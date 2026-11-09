@@ -1,10 +1,18 @@
 {
     "name": "angelscript",
-    "scopeName": "source.angelscript",
+    "scopeName": "source.soloas-angelscript",
     "patterns": [
         {
             "name": "keyword.declaration.angelscript",
-            "match": "\\b(class|struct|delegate|event|import|enum|namespace)\\b"
+            "match": "\\b(class|interface|struct|delegate|event|import|enum|namespace)\\b"
+        },
+        {
+            "name": "punctuation.definition.lambda.capture.begin.angelscript",
+            "match": "\\[(?=[^\\]\\n]*\\]\\s*\\()"
+        },
+        {
+            "name": "punctuation.definition.lambda.capture.end.angelscript",
+            "match": "\\](?=\\s*\\()"
         },
         {
             "name": "keyword.statement.angelscript",
@@ -255,7 +263,7 @@
                     },
                     "patterns": [
                         {
-                            "include": "source.angelscript"
+                            "include": "source.soloas-angelscript"
                         }
                     ],
                     "name": "meta.embedded.expression.angelscript",

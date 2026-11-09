@@ -600,7 +600,7 @@ function AddCreateBlueprintActions(context : CodeActionContext)
             source: "angelscript",
             command: {
                 title: title,
-                command: "angelscript.saveAndCreateBlueprint",
+                command: "soloas.saveAndCreateBlueprint",
                 arguments: [context.module.uri, typeOfScope.name],
             }
         });

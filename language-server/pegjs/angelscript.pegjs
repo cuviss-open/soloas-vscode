@@ -94,6 +94,8 @@ start_enum
     = @enum_statement _
     / _ { return null; }
 
+start_lambda = _ @lambda_header _
+
 comment
     = "/" "*" (!("*" "/") .)* "*" "/"
     / "/" "/" [^\r\n]*
@@ -167,6 +169,7 @@ global_declaration
     / event_decl
     / struct_decl
     / class_decl
+    / interface_decl
     / enum_decl
     / namespace_decl
     / asset_decl
@@ -534,13 +537,35 @@ expression
     / keyword !identifier_char _ { return null; }
 
 primary_expression
-    = &"t" token:"this" _ { return Literal(range(), n.This, token); }
+    = @lambda_expression _
+    / &"t" token:"this" _ { return Literal(range(), n.This, token); }
     / "(" _ @optional_expression ")" _
     / @namespaced_identifier _
         // Avoid parsing a template constructor as an identifier, we want to parse it as a constructor call later
         !("<" _ typename|..,_ "," _| _ ">" _ "(" )
     / @cast_expression _
     / @constructor_call _
+
+lambda_header
+    = "[" _ captures:parameter_list _ "]" _ "(" _ params:parameter_list _ ")"
+    {
+        let node = Compound(range(), n.LambdaExpression, null);
+        node.captures = captures;
+        node.parameters = params;
+        return node;
+    }
+
+lambda_expression
+    = header:lambda_header _ lambda_body
+    { return ExtendedCompound(range(), header); }
+
+// Body statements are parsed by the language server's normal scope parser.
+lambda_body
+    = "{" (comment / lambda_string / lambda_body / ![{}] .)* "}"
+
+lambda_string
+    = '"' ('\\' . / !["\\] .)* '"'
+    / "'" ('\\' . / !['\\] .)* "'"
 
 namespaced_identifier
     = leading:(":" ":" _ )? ident:identifier namespaces:(_ ":" ":" _ @identifier?)* trailing:":"?
@@ -944,6 +969,7 @@ octal_literal = "0" "o" [0-8]*
 keyword
     = &"i" @(
         "if"
+        / "interface"
     )
     / &"r" @(
         "return"
@@ -1317,21 +1343,34 @@ struct_decl
     }
 
 class_decl
-    = macro:(@uclass_macro _)? &"c" "class" _ name:identifier superclass:(
-        _ ":" @(_ @(
-            identifier_name (_ ":" ":" _ identifier_name)*
-            {
-                return Identifier(range(), text());
-            }
-        ))?
-    )?
+    = macro:(@uclass_macro _)? &"c" "class" _ name:identifier parents:parent_list?
     {
         let node = Compound(range(), n.ClassDefinition, null);
         node.name = name;
         node.macro = macro;
-        node.superclass = superclass;
+        node.superclass = parents && parents.length ? parents[0] : null;
+        node.interfaces = parents ? parents.slice(1) : [];
         return node;
     }
+
+interface_decl
+    = "interface" __ name:identifier parents:parent_list?
+    {
+        let node = Compound(range(), n.ClassDefinition, null);
+        node.name = name;
+        node.isInterface = true;
+        node.superclass = null;
+        node.interfaces = parents || [];
+        return node;
+    }
+
+parent_list
+    = _ ":" _ head:parent_name tail:(_ "," _ @parent_name)*
+    { return [head].concat(tail); }
+
+parent_name
+    = identifier_name (_ ":" ":" _ identifier_name)*
+    { return Identifier(range(), text()); }
 
 enum_decl
     = macro:(@uenum_macro _)? &"e" "enum" _ name:identifier

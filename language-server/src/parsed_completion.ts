@@ -257,11 +257,12 @@ export function Complete(asmodule: scriptfiles.ASModule, position: Position): Ar
 
         // Complete from local variables and parameters
         let checkscope = context.scope;
+        let localNames = new Set<string>();
         while (checkscope)
         {
             if (!checkscope.isInFunctionBody())
                 break;
-            AddCompletionsFromLocalVariables(context, checkscope, completions);
+            AddCompletionsFromLocalVariables(context, checkscope, completions, localNames);
             checkscope = checkscope.parentscope;
         }
 
@@ -728,7 +729,7 @@ function AddCompletionsFromCallSignature(context: CompletionContext, completions
                         label: complStr,
                         documentation: <MarkupContent>{
                             kind: MarkupKind.Markdown,
-                            value: "```angelscript_snippet\n" + complStr + "\n\n```"
+                            value: "```soloas_snippet\n" + complStr + "\n\n```"
                         },
                         kind: CompletionItemKind.Snippet,
                         sortText: Sort.Snippet,
@@ -804,7 +805,7 @@ function AddCompletionsFromCallSignature(context: CompletionContext, completions
                             insertText: complStr+" ",
                             documentation: <MarkupContent> {
                                 kind: MarkupKind.Markdown,
-                                value: "```angelscript_snippet\n"+complStr+"\n\n```"
+                                value: "```soloas_snippet\n"+complStr+"\n\n```"
                             },
                             kind: CompletionItemKind.Snippet,
                             sortText: Sort.Snippet,
@@ -1544,12 +1545,13 @@ export function AddCompletionsFromClassKeywords(context : CompletionContext, com
     }
 }
 
-export function AddCompletionsFromLocalVariables(context : CompletionContext, scope : scriptfiles.ASScope, completions : Array<CompletionItem>)
+export function AddCompletionsFromLocalVariables(context : CompletionContext, scope : scriptfiles.ASScope, completions : Array<CompletionItem>, localNames : Set<string>)
 {
     for (let asvar of scope.variables)
     {
-        if (CanCompleteTo(context, asvar.name))
+        if (!localNames.has(asvar.name) && CanCompleteTo(context, asvar.name))
         {
+            localNames.add(asvar.name);
             let complItem = <CompletionItem> {
                 label: asvar.name,
                 labelDetails: <CompletionItemLabelDetails>
@@ -1848,7 +1850,7 @@ export function AddCompletionsFromType(context : CompletionContext, curtype : ty
 
                 compl.command = <Command> {
                     title: "",
-                    command: "angelscript.paren",
+                    command: "soloas.paren",
                 };
 
                 if (func.returnType && func.returnType != "void")
@@ -2142,7 +2144,7 @@ export function AddMixinCompletions(context : CompletionContext, completions : A
 
                     compl.command = <Command> {
                         title: "",
-                        command: "angelscript.paren",
+                        command: "soloas.paren",
                     };
 
                     if (context.isTypeExpected(sym.returnType))
@@ -4477,7 +4479,7 @@ export function Resolve(item : CompletionItem) : CompletionItem
         {
             item.documentation = <MarkupContent> {
                 kind: MarkupKind.Markdown,
-                value: "```angelscript_snippet\n"+NoBreakingSpaces(prop.format())+"\n```\n\n",
+                value: "```soloas_snippet\n"+NoBreakingSpaces(prop.format())+"\n```\n\n",
             };
             if (prop.documentation)
                 item.documentation.value += "\n\n"+FormatPropertyDocumentation(prop.documentation)+"\n\n";
@@ -4507,7 +4509,7 @@ export function Resolve(item : CompletionItem) : CompletionItem
         let docStr = "";
         if (getFunc)
         {
-            docStr += "```angelscript_snippet\n"+getFunc.returnType+"\xa0"+dataArray[2]+"\n```\n\n";
+            docStr += "```soloas_snippet\n"+getFunc.returnType+"\xa0"+dataArray[2]+"\n```\n\n";
             item.labelDetails = <CompletionItemLabelDetails>
             {
                 description: getFunc.returnType,
@@ -4515,7 +4517,7 @@ export function Resolve(item : CompletionItem) : CompletionItem
         }
         else if (setFunc && setFunc.args && setFunc.args.length >= 1)
         {
-            docStr += "```angelscript_snippet\n"+setFunc.args[0].typename+"\xa0"+dataArray[2]+"\n```\n\n";
+            docStr += "```soloas_snippet\n"+setFunc.args[0].typename+"\xa0"+dataArray[2]+"\n```\n\n";
             item.labelDetails = <CompletionItemLabelDetails>
             {
                 description: setFunc.args[0].typename,
@@ -4568,7 +4570,7 @@ export function Resolve(item : CompletionItem) : CompletionItem
             let complStr = NoBreakingSpaces(NicifyDefinition(func, func.format(null, isMixin)));
             item.documentation = <MarkupContent> {
                 kind: MarkupKind.Markdown,
-                value: "```angelscript_snippet\n"+complStr+"\n```\n\n",
+                value: "```soloas_snippet\n"+complStr+"\n```\n\n",
             };
 
             let doc = func.findAvailableDocumentation();
@@ -4582,7 +4584,7 @@ export function Resolve(item : CompletionItem) : CompletionItem
 
             item.command = <Command> {
                 title: "",
-                command: "angelscript.paren",
+                command: "soloas.paren",
             };
 
             if (func.returnType && func.returnType != "void")
@@ -4600,7 +4602,7 @@ export function Resolve(item : CompletionItem) : CompletionItem
             let complStr = NoBreakingSpaces(GetDeclarationSnippet(func, null, true));
             item.documentation = <MarkupContent> {
                 kind: MarkupKind.Markdown,
-                value: "```angelscript_snippet\n"+complStr+"\n```\n\n",
+                value: "```soloas_snippet\n"+complStr+"\n```\n\n",
             };
 
             let doc = func.findAvailableDocumentation();
@@ -4709,7 +4711,7 @@ export function AddMathShortcutCompletions(context : CompletionContext, completi
 
         compl.command = <Command> {
             title: "",
-            command: "angelscript.paren",
+            command: "soloas.paren",
         };
 
         if (func.returnType && func.returnType != "void")

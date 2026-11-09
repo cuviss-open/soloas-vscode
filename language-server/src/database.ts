@@ -630,6 +630,8 @@ export class DBType implements DBSymbol
     typeid : number = -1;
     name : string;
     supertype : string;
+    interfaces : Array<string> = [];
+    isInterface : boolean = false;
     unrealsuper : string;
     documentation : string;
     namespace : DBNamespace;
@@ -676,6 +678,8 @@ export class DBType implements DBSymbol
         let inst = new DBType();
         inst.name = this.name;
         inst.supertype = this.supertype;
+        inst.interfaces = this.interfaces;
+        inst.isInterface = this.isInterface;
         inst.isEnum = this.isEnum;
         inst.declaredModule = this.declaredModule;
         inst.moduleOffset = this.moduleOffset;
@@ -859,7 +863,7 @@ export class DBType implements DBSymbol
 
     hasExtendTypes() : boolean
     {
-        if(this.supertype)
+        if(this.supertype || this.interfaces.length)
             return true;
         if (this.isTemplateInstantiation && this.isTemplateInheritSpecializations)
             return true;
@@ -896,6 +900,13 @@ export class DBType implements DBSymbol
                 let dbsuper = LookupType(checkType.namespace, checkType.supertype);
                 if(dbsuper && !this.extendTypes.includes(dbsuper))
                     this.extendTypes.push(dbsuper);
+            }
+
+            for (let name of checkType.interfaces)
+            {
+                let iface = LookupType(checkType.namespace, name);
+                if (iface && !this.extendTypes.includes(iface))
+                    this.extendTypes.push(iface);
             }
 
             if (checkType.isTemplateInstantiation && checkType.templateSubTypes.length > 0 && this.isTemplateInheritSpecializations)
@@ -1035,6 +1046,8 @@ export class DBType implements DBSymbol
         let dbCheck : DBType = LookupType(this.namespace, checktype);
         if(!dbCheck)
             return false;
+        if (this.getExtendTypesList().includes(dbCheck))
+            return true;
         let depth = 0;
         while(it && depth < 100)
         {

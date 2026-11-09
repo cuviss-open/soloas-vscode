@@ -45,7 +45,7 @@ export function SetInitialParseDone()
 export let node_types = require("../grammar/node_types.js");
 
 export let ASKeywords = [
-    "for", "if", "enum", "return", "continue", "break", "class", "struct", "default",
+    "for", "if", "enum", "return", "continue", "break", "class", "interface", "struct", "default",
     "void", "const", "delegate", "event", "else", "while", "case", "Cast", "namespace",
     "UFUNCTION", "UPROPERTY", "UCLASS", "USTRUCT", "nullptr", "true", "false", "this", "auto",
     "final", "property", "override", "mixin", "switch", "fallthrough",
@@ -434,6 +434,8 @@ export class ASScope extends ASElement
     scopes : Array<ASScope> = [];
 
     declaration : ASStatement = null;
+    lambdaHeader : any = null;
+    lambdaStatement : ASStatement = null;
     element_head : ASElement = null;
 
     scopetype : ASScopeType = null;
@@ -908,65 +910,39 @@ function EnsureTypeHierarchyFullyParsed(dbtype : typedb.DBType) : boolean
 {
     let newTypesLoaded = false;
 
-    let superTypeName = dbtype.supertype;
-    let superNamespace = dbtype.namespace;
-    while (superTypeName)
+    let pending : Array<{name: string, namespace: typedb.DBNamespace}> = [];
+    let visited = new Set<typedb.DBType>();
+    function enqueue(type : typedb.DBType)
     {
-        let superType = typedb.LookupType(superNamespace, superTypeName);
-        if (superType)
+        if (visited.has(type))
+            return;
+        visited.add(type);
+        for (let name of [type.supertype, ...type.interfaces])
+            if (name)
+                pending.push({name: name, namespace: type.namespace});
+    }
+    enqueue(dbtype);
+    while (pending.length)
+    {
+        let next = pending.pop();
+        let superType = typedb.LookupType(next.namespace, next.name);
+        if (!superType)
         {
-            if (superType.declaredModule)
-            {
-                let superModule = GetModule(superType.declaredModule);
-                if (superModule.resolved)
-                {
-                    // Super module is already resolved, no need to check further
-                    break;
-                }
-                else
-                {
-                    // Super module must already be parsed if the type in it exists,
-                    // but keep checking supers to make sure they're all parsed.
-                    superTypeName = superType.supertype;
-                    superNamespace = superType.namespace;
-                    continue;
-                }
-            }
-            else
-            {
-                // C++ type, no need to check further
-                break;
-            }
-        }
-        else
-        {
-            // Super module not parsed yet? Check the preparse lookup
-            let potentialModules = PreParsedIdentifiersInModules.get(superTypeName);
+            let potentialModules = PreParsedIdentifiersInModules.get(next.name);
             if (potentialModules)
             {
-                // Parse all modules that might contain the superclass
                 for (let moduleWithSuper of potentialModules)
                     LoadAndParseModule(moduleWithSuper);
-
-                let superType = typedb.LookupType(superNamespace, superTypeName);
+                superType = typedb.LookupType(next.namespace, next.name);
                 if (superType)
-                {
-                    // We found a new supertype, so we need to re-resolve
                     newTypesLoaded = true;
-                    continue;
-                }
-                else
-                {
-                    // If we still can't find the supertype now, give up
-                    break;
-                }
             }
-            else
-            {
-                // We couldn't find the super type in our preparsed identifiers,
-                // just give up now.
-                break;
-            }
+        }
+        if (superType && superType.declaredModule)
+        {
+            let superModule = GetModule(superType.declaredModule);
+            if (!superModule.resolved)
+                enqueue(superType);
         }
     }
 
@@ -1191,7 +1167,7 @@ function LoadModule(module : ASModule)
 }
 
 // Use regex to lift out types, namespaces and global functions so resolve can find them later
-let re_preparse_type = /\s*(class|struct|namespace|enum)\s+([A-Za-z0-9_]+)(\s*:\s*([A-Za-z0-9_]+))?\s*\{/g;
+let re_preparse_type = /\s*(class|interface|struct|namespace|enum)\s+([A-Za-z0-9_]+)(\s*:\s*[A-Za-z0-9_:]+(?:\s*,\s*[A-Za-z0-9_:]+)*)?\s*\{/g;
 let re_preparse_function = /(\n|^)[ \t]*((mixin|delegate|event)[ \t]+)?((const[ \t]+)?([A-Za-z_0-9]+(\<[A-Za-z0-9_]+(,\s*[A-Za-z0-9_]+)*\>)?)([ \t]*&)?)[\t ]+([A-Za-z0-9_]+)\(((.|\n|\r)*?)\)/g;
 function PreParseTypes(module : ASModule)
 {
@@ -1826,6 +1802,14 @@ function ExtendScopeToStatement(scope : ASScope, statement : ASStatement)
 function GenerateTypeInformation(scope : ASScope)
 {
     scope.resolvedNamespace = scope.parentscope ? scope.parentscope.resolvedNamespace : typedb.GetRootNamespace();
+    if (scope.lambdaHeader)
+    {
+        // Reuse parameter handling without registering a named function.
+        scope.start_offset = scope.lambdaStatement.start_offset;
+        let signature = AddDBMethod(scope, "");
+        AddParametersToFunction(scope, scope.lambdaStatement, signature,
+            scope.lambdaHeader.captures.concat(scope.lambdaHeader.parameters));
+    }
     if (scope.previous && scope.previous instanceof ASStatement && scope.previous.ast)
     {
         // Class definition in global scope
@@ -1835,7 +1819,9 @@ function GenerateTypeInformation(scope : ASScope)
 
             let classdef = scope.previous.ast;
             let dbtype = AddDBType(scope, classdef.name.value);
-            dbtype.supertype = classdef.superclass ? classdef.superclass.value : "UObject";
+            dbtype.isInterface = !!classdef.isInterface;
+            dbtype.supertype = classdef.superclass ? classdef.superclass.value : (dbtype.isInterface ? null : "UObject");
+            dbtype.interfaces = (classdef.interfaces || []).map((parent : any) => parent.value);
             if (classdef.documentation)
                 dbtype.documentation = typedb.FormatDocumentationComment(classdef.documentation);
 
@@ -3758,6 +3744,16 @@ function DetectScopeSymbols(scope : ASScope) : ASParseContext
     // Look at each statement to see if it has symbols
     let element = scope.element_head;
     let parseContext = new ASParseContext();
+    if (scope.lambdaHeader)
+    {
+        for (let param of scope.lambdaHeader.captures.concat(scope.lambdaHeader.parameters))
+        {
+            if (param.typename)
+                AddTypenameSymbol(scope, scope.lambdaStatement, param.typename);
+            if (param.name)
+                AddIdentifierSymbol(scope, scope.lambdaStatement, param.name, ASSymbolType.Parameter, null, param.name.value);
+        }
+    }
     while (element)
     {
         if (element instanceof ASStatement)
@@ -4788,22 +4784,21 @@ function DetectNodeSymbols(scope : ASScope, statement : ASStatement, node : any,
             AddIdentifierSymbol(scope, statement, node.name, ASSymbolType.Typename, null, node.name.value);
 
             // If we specified a super type, add the symbol for that too
-            if (node.superclass)
+            for (let parent of [node.superclass, ...(node.interfaces || [])].filter(Boolean))
             {
-                let superType = typedb.LookupType(scope.getNamespace(), node.superclass.value);
+                let superType = typedb.LookupType(scope.getNamespace(), parent.value);
                 if (superType)
                 {
-                    AddIdentifierSymbol(scope, statement, node.superclass, ASSymbolType.Typename, null, node.superclass.value);
+                    AddIdentifierSymbol(scope, statement, parent, ASSymbolType.Typename, null, parent.value);
                     scope.module.markDependencyType(superType);
                 }
                 else
                 {
                     let hasPotentialCompletions = false;
-                    if (scope.module.isEditingNode(statement, node.superclass))
-                        hasPotentialCompletions = typedb.HasTypeWithPrefix(scope.getNamespace(), node.superclass.value);
-                    AddUnknownSymbol(scope, statement, node.superclass, hasPotentialCompletions);
-                    scope.module.markDependencyIdentifier(node.superclass.value);
-                    return null;
+                    if (scope.module.isEditingNode(statement, parent))
+                        hasPotentialCompletions = typedb.HasTypeWithPrefix(scope.getNamespace(), parent.value);
+                    AddUnknownSymbol(scope, statement, parent, hasPotentialCompletions);
+                    scope.module.markDependencyIdentifier(parent.value);
                 }
             }
         }
@@ -5859,6 +5854,27 @@ function ParseScopeIntoStatements(scope : ASScope)
                 subscope.start_offset = scope_start+1;
                 subscope.end_offset = cur_offset;
 
+                // The outer call is split at the lambda body. Parse its trailing
+                // capture/parameter header separately, retaining source offsets.
+                if (cur_element instanceof ASStatement)
+                {
+                    let headerStart = cur_element.content.lastIndexOf("[");
+                    if (headerStart >= 0)
+                    {
+                        let header = cur_element.content.substring(headerStart);
+                        try
+                        {
+                            subscope.lambdaHeader = PEGGY_GRAMMAR.parse(header, { startRule: "start_lambda" });
+                            let headerStatement = new ASStatement();
+                            headerStatement.content = header;
+                            headerStatement.start_offset = cur_element.start_offset + headerStart;
+                            headerStatement.end_offset = cur_element.end_offset;
+                            subscope.lambdaStatement = headerStatement;
+                        }
+                        catch (_) { /* Not a lambda header. */ }
+                    }
+                }
+
                 scope.scopes.push(subscope);
                 finishElement(subscope);
                 scope_start = null;
@@ -6139,6 +6155,25 @@ function ParseAllStatements(scope : ASScope, debug : boolean = false)
             console.log("Statement: "+statement.start_offset+" -> "+statement.end_offset);
             console.log("Edit: "+scope.module.lastEditStart+" -> "+scope.module.lastEditEnd);
         }*/
+    }
+
+    // Interface methods can end in a semicolon and still declare a member.
+    if (scope.scopetype == ASScopeType.Class && scope.previous instanceof ASStatement
+        && scope.previous.ast && scope.previous.ast.isInterface)
+    {
+        for (let statement of scope.statements)
+        {
+            if (!statement || !statement.endsWithSemicolon || !statement.ast
+                || statement.ast.type != node_types.FunctionDecl)
+                continue;
+            let methodScope = new ASScope();
+            methodScope.parentscope = scope;
+            methodScope.module = scope.module;
+            methodScope.previous = statement;
+            methodScope.start_offset = statement.end_offset;
+            methodScope.end_offset = statement.end_offset;
+            scope.scopes.push(methodScope);
+        }
     }
 
     // Also parse any subscopes we detected

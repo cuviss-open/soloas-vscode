@@ -1,10 +1,10 @@
 {
-    "name": "unreal-angelscript",
-    "displayName": "Unreal Angelscript",
-    "description": "Language Server and Debug Adapter for use with the UnrealEngine-Angelscript plugin from https://github.com/Hazelight/UnrealEngine-Angelscript",
-    "version": "1.9.4",
-    "publisher": "Hazelight",
-    "icon": "resources/angelscript_unreal.png",
+    "name": "soloas",
+    "displayName": "soloAS",
+    "description": "soloAS（Unreal Engine AngelScript）编辑与调试扩展，基于 Hazelight 维护的 UE-AS 官方扩展。 Editing and debugging for soloAS, based on the official UE-AS extension maintained by Hazelight.",
+    "version": "0.2.0",
+    "publisher": "cuviss",
+    "icon": "brand/soloas-icon-128.png",
     "engines": {
         "vscode": "^1.65.0"
     },
@@ -13,42 +13,42 @@
         "Debuggers"
     ],
     "activationEvents": [
-        "onDebug",
-        "onLanguage:angelscript"
+        "onDebug:soloas",
+        "onLanguage:soloas-angelscript"
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/Hazelight/vscode-unreal-angelscript"
+        "url": "https://github.com/cuviss-open/soloas-vscode"
     },
     "main": "./extension/dist/extension.js",
     "contributes": {
         "viewsContainers": {
             "activitybar": [
                 {
-                    "id": "angelscript-api",
-                    "title": "Angelscript API",
+                    "id": "soloas-api",
+                    "title": "soloAS API",
                     "icon": "resources/angelscript_unreal.png"
                 }
             ]
         },
         "views": {
-            "angelscript-api": [
+            "soloas-api": [
                 {
-                    "id": "angelscript-api-search",
+                    "id": "soloas-api-search",
                     "name": "Search",
                     "icon": "resources/angelscript_unreal.png",
                     "type": "webview",
                     "initialSize": 1
                 },
                 {
-                    "id": "angelscript-api-list",
+                    "id": "soloas-api-list",
                     "name": "List",
                     "icon": "resources/angelscript_unreal.png",
                     "type": "tree",
                     "initialSize": 20
                 },
                 {
-                    "id": "angelscript-api-details",
+                    "id": "soloas-api-details",
                     "name": "Details",
                     "icon": "resources/angelscript_unreal.png",
                     "type": "webview",
@@ -59,67 +59,67 @@
         "configuration": {
             "title": "Unreal Angelscript",
             "properties": {
-                "UnrealAngelscript.insertParenthesisOnFunctionCompletion": {
+                "SoloAS.insertParenthesisOnFunctionCompletion": {
                     "type": "boolean",
                     "default": false,
                     "description": "Insert parenthesis pair when auto-completing a function call."
                 },
-                "UnrealAngelscript.diagnosticsForUnrealNamingConvention": {
+                "SoloAS.diagnosticsForUnrealNamingConvention": {
                     "type": "boolean",
                     "default": true,
                     "description": "Emit diagnostic warnings and hints when types, functions, or variables violate the Unreal naming convention."
                 },
-                "UnrealAngelscript.markUnreadVariablesAsUnused": {
+                "SoloAS.markUnreadVariablesAsUnused": {
                     "type": "boolean",
                     "default": false,
                     "description": "Variables that are written to but never read are marked as unused as well."
                 },
-                "UnrealAngelscript.mathCompletionShortcuts": {
+                "SoloAS.mathCompletionShortcuts": {
                     "type": "boolean",
                     "default": true,
                     "description": "Add completions for functions in the Math:: namespace so they can be completed without typing Math:: first."
                 },
-                "UnrealAngelscript.correctFloatLiteralsWhenExpectingDoublePrecision": {
+                "SoloAS.correctFloatLiteralsWhenExpectingDoublePrecision": {
                     "type": "boolean",
                     "default": false,
                     "markdownDescription": "When a float literal is typed (eg `1.f`) in a context where double-precision is expected, automatically correct it (eg to `1.0`)"
                 },
-                "UnrealAngelscript.unrealConnectionPort": {
+                "SoloAS.unrealConnectionPort": {
                     "type": "number",
                     "default": 27099,
                     "description": "What port to use when connecting to the Unreal engine game or editor instance for auto-completion and debugging. Must match the debug port configured in the Unreal Engine project settings, or as a launch argument (-asdebugport=)."
                 },
-                "UnrealAngelscript.inlayHints.inlayHintsEnabled": {
+                "SoloAS.inlayHints.inlayHintsEnabled": {
                     "type": "boolean",
                     "default": true,
                     "description": "Enable inlay hints rendered by the angelscript extension."
                 },
-                "UnrealAngelscript.inlayHints.parameterHintsForConstants": {
+                "SoloAS.inlayHints.parameterHintsForConstants": {
                     "type": "boolean",
                     "default": true,
                     "description": "Show parameter name hints when passing a constant literal argument."
                 },
-                "UnrealAngelscript.inlayHints.parameterHintsForComplexExpressions": {
+                "SoloAS.inlayHints.parameterHintsForComplexExpressions": {
                     "type": "boolean",
                     "default": true,
                     "description": "Show parameter name hints when passing a complex expression as an argument."
                 },
-                "UnrealAngelscript.inlayHints.parameterReferenceHints": {
+                "SoloAS.inlayHints.parameterReferenceHints": {
                     "type": "boolean",
                     "default": true,
                     "description": "Show an inlay hint when a parameter takes a writeable reference."
                 },
-                "UnrealAngelscript.inlayHints.parameterHintsForSingleParameterFunctions": {
+                "SoloAS.inlayHints.parameterHintsForSingleParameterFunctions": {
                     "type": "boolean",
                     "default": false,
                     "description": "Enable parameter name hints for functions that are only passed a single argument."
                 },
-                "UnrealAngelscript.inlayHints.typeHintsForAutos": {
+                "SoloAS.inlayHints.typeHintsForAutos": {
                     "type": "boolean",
                     "default": true,
                     "description": "Show the name of the type as an inlay hint on auto declarations."
                 },
-                "UnrealAngelscript.inlayHints.typeHintsForAutoIgnoredTypes": {
+                "SoloAS.inlayHints.typeHintsForAutoIgnoredTypes": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -127,7 +127,7 @@
                     "default": [],
                     "description": "Types in this list will never receive a type hint for an auto declaration"
                 },
-                "UnrealAngelscript.inlayHints.parameterHintsIgnoredParameterNames": {
+                "SoloAS.inlayHints.parameterHintsIgnoredParameterNames": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -145,7 +145,7 @@
                     ],
                     "description": "Parameters with a name included in this list will be ignored for inlay hints."
                 },
-                "UnrealAngelscript.inlayHints.parameterHintsIgnoredFunctionNames": {
+                "SoloAS.inlayHints.parameterHintsIgnoredFunctionNames": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -153,27 +153,27 @@
                     "default": [],
                     "description": "Functions with a name included in this list will be ignored for inlay hints"
                 },
-                "UnrealAngelscript.inlineValues.showInlineValueForLocalVariables": {
+                "SoloAS.inlineValues.showInlineValueForLocalVariables": {
                     "type": "boolean",
                     "default": true,
                     "description": "When debugging, show an inline value next to local variable declarations."
                 },
-                "UnrealAngelscript.inlineValues.showInlineValueForParameters": {
+                "SoloAS.inlineValues.showInlineValueForParameters": {
                     "type": "boolean",
                     "default": true,
                     "description": "When debugging, show an inline value for function parameters."
                 },
-                "UnrealAngelscript.inlineValues.showInlineValueForMemberAssignment": {
+                "SoloAS.inlineValues.showInlineValueForMemberAssignment": {
                     "type": "boolean",
                     "default": true,
                     "description": "When debugging, show an inline value next to direct assignments of this member variables."
                 },
-                "UnrealAngelscript.inlineValues.showInlineValueForFunctionThisObject": {
+                "SoloAS.inlineValues.showInlineValueForFunctionThisObject": {
                     "type": "boolean",
                     "default": true,
                     "description": "When debugging, show an inline value above the function declaration to display the this pointer and Owner of the object."
                 },
-                "UnrealAngelscript.scriptIgnorePatterns": {
+                "SoloAS.scriptIgnorePatterns": {
                     "type": "array",
                     "default": [
                         "**/Saved/**",
@@ -181,7 +181,7 @@
                     ],
                     "description": "Glob patterns to ignore when searching for script files to parse."
                 },
-                "UnrealAngelscript.codeLenses.showCreateBlueprintClasses": {
+                "SoloAS.codeLenses.showCreateBlueprintClasses": {
                     "type": "array",
                     "default": [
                         "AActor",
@@ -189,27 +189,27 @@
                     ],
                     "description": "Script classes inheriting from the specified classes will have a 'Create Blueprint' prompt above them if they don't already have a blueprint implementation."
                 },
-                "UnrealAngelscript.dataBreakpoints.cppBreakpoints.enable": {
+                "SoloAS.dataBreakpoints.cppBreakpoints.enable": {
                     "type": "boolean",
                     "default": false,
                     "description": "Should Data Breakpoints trigger in C++? If not, any Data Breakpoint will surface as an AS breakpoint, potentially missing the C++ callstack."
                 },
-                "UnrealAngelscript.dataBreakpoints.cppBreakpoints.triggerCount": {
+                "SoloAS.dataBreakpoints.cppBreakpoints.triggerCount": {
                     "type": "number",
                     "default": 1,
                     "description": "How many times a C++ Data Breakpoint should trigger (silently) before activating and disabling, -1 means it will never disable automatically."
                 },
-                "UnrealAngelscript.dataBreakpoints.asBreakpoints.triggerCount": {
+                "SoloAS.dataBreakpoints.asBreakpoints.triggerCount": {
                     "type": "number",
                     "default": -1,
                     "description": "How many times a AS Data Breakpoint should trigger (silently) before activating and disabling, -1 means it will never disable automatically."
                 },
-                "UnrealAngelscript.projectCodeGeneration.enable": {
+                "SoloAS.projectCodeGeneration.enable": {
                     "type": "boolean",
                     "default": false,
                     "description": "Should project code generation be enabled? If not, only built-in code generation will be applied."
                 },
-                "UnrealAngelscript.projectCodeGeneration.generators": {
+                "SoloAS.projectCodeGeneration.generators": {
                     "type": "array",
                     "default": [],
                     "description": "What generators to apply during analysis.",
@@ -441,7 +441,7 @@
                         }
                     }
                 },
-                "UnrealAngelscript.completion.dependencyRestrictions": {
+                "SoloAS.completion.dependencyRestrictions": {
                     "type": "array",
                     "default": [],
                     "description": "Restrictions to apply for which modules can depend on symbols from which other modules",
@@ -465,10 +465,10 @@
         },
         "languages": [
             {
-                "id": "angelscript",
+                "id": "soloas-angelscript",
                 "aliases": [
-                    "Angelscript",
-                    "angelscript"
+                    "soloAS AngelScript",
+                    "soloas-angelscript"
                 ],
                 "extensions": [
                     ".as"
@@ -480,9 +480,9 @@
                 }
             },
             {
-                "id": "angelscript_snippet",
+                "id": "soloas_snippet",
                 "aliases": [
-                    "Angelscript Snippet"
+                    "soloAS AngelScript Snippet"
                 ],
                 "extensions": [],
                 "configuration": "./extension/language-configuration.json"
@@ -490,34 +490,37 @@
         ],
         "grammars": [
             {
-                "language": "angelscript",
-                "scopeName": "source.angelscript",
+                "language": "soloas-angelscript",
+                "scopeName": "source.soloas-angelscript",
                 "path": "./extension/syntaxes/angelscript.tmLanguage.json"
             },
             {
-                "language": "angelscript_snippet",
-                "scopeName": "source.angelscript_snippet",
+                "language": "soloas_snippet",
+                "scopeName": "source.soloas_snippet",
                 "path": "./extension/syntaxes/angelscript_snippet.tmLanguage.json"
             }
         ],
         "configurationDefaults": {
-            "[angelscript]": {
+            "files.associations": {
+                "*.as": "soloas-angelscript"
+            },
+            "[soloas-angelscript]": {
                 "editor.tabSize": 4
             }
         },
         "breakpoints": [
             {
-                "language": "angelscript"
+                "language": "soloas-angelscript"
             }
         ],
         "debuggers": [
             {
-                "type": "angelscript",
-                "label": "Angelscript Debug",
+                "type": "soloas",
+                "label": "soloAS Debug",
                 "program": "./extension/out/debugAdapter.js",
                 "runtime": "node",
                 "languages": [
-                    "angelscript"
+                    "soloas-angelscript"
                 ],
                 "configurationAttributes": {
                     "launch": {
@@ -543,19 +546,19 @@
                 },
                 "initialConfigurations": [
                     {
-                        "type": "angelscript",
+                        "type": "soloas",
                         "request": "launch",
-                        "name": "Debug Angelscript"
+                        "name": "Debug soloAS"
                     }
                 ],
                 "configurationSnippets": [
                     {
-                        "label": "Start Angelscript Debugging",
+                        "label": "Start soloAS Debugging",
                         "description": "Debug angelscript code.",
                         "body": {
-                            "type": "angelscript",
+                            "type": "soloas",
                             "request": "launch",
-                            "name": "Debug Angelscript"
+                            "name": "Debug soloAS"
                         }
                     }
                 ]
@@ -563,27 +566,27 @@
         ],
         "commands": [
             {
-                "command": "angelscript.goToSymbol",
-                "title": "Go to Symbol"
+                "command": "soloas.goToSymbol",
+                "title": "soloAS: Go to Symbol"
             },
             {
-                "command": "angelscript.paren",
+                "command": "soloas.paren",
                 "title": "Angelscript Parenthesis Completion",
                 "enablement": "false"
             },
             {
-                "command": "angelscript.saveAndCreateBlueprint",
+                "command": "soloas.saveAndCreateBlueprint",
                 "title": "Angelscript Save and Create Blueprint",
                 "enablement": "false"
             },
             {
-                "command": "angelscript.saveAndEditAsset",
+                "command": "soloas.saveAndEditAsset",
                 "title": "Angelscript Save and Edit Asset",
                 "enablement": "false"
             },
             {
-                "command": "angelscript.debugStopPIE",
-                "title": "Unreal: Resume Execution and Stop Any Active PIE Sessions",
+                "command": "soloas.debugStopPIE",
+                "title": "soloAS: Resume Execution and Stop Any Active PIE Sessions",
                 "shortTitle": "Resume and Stop PIE",
                 "icon": "resources/stop_pie.png"
             }
@@ -591,28 +594,28 @@
         "menus": {
             "editor/context": [
                 {
-                    "when": "resourceLangId == angelscript",
-                    "command": "angelscript.goToSymbol",
+                    "when": "resourceLangId == soloas-angelscript",
+                    "command": "soloas.goToSymbol",
                     "group": "navigation"
                 }
             ],
             "debug/toolBar": [
                 {
-                    "command": "angelscript.debugStopPIE",
-                    "when": "debugType == angelscript && debugState == stopped"
+                    "command": "soloas.debugStopPIE",
+                    "when": "debugType == soloas && debugState == stopped"
                 }
             ]
         },
         "keybindings": [
             {
-                "command": "angelscript.goToSymbol",
+                "command": "soloas.goToSymbol",
                 "key": "alt+g",
-                "when": "editorTextFocus"
+                "when": "editorTextFocus && editorLangId == soloas-angelscript"
             }
         ],
         "semanticTokenScopes": [
             {
-                "language": "angelscript",
+                "language": "soloas-angelscript",
                 "scopes": {
                     "as_typename": [
                         "support.type.angelscript"
@@ -680,6 +683,7 @@
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
+        "build": "npm run compile",
         "compile": "npm run compile:extension && npm run compile:language-server",
         "compile:extension": "cd extension && node esbuild.js",
         "compile:language-server": "cd language-server && node esbuild.js",
@@ -687,7 +691,12 @@
         "watch:extension": "cd extension && node esbuild.js --watch",
         "watch:language-server": "cd language-server && node esbuild.js --watch",
         "postinstall": "cd extension && npm install && cd ../language-server && npm install && cd ..",
-        "pegjs:compile": "cd language-server/pegjs && peggy angelscript.pegjs --allowed-start-rules start,start_global,start_class,start_enum",
-        "pegjs:test": "cd language-server/pegjs && peggy angelscript.pegjs --allowed-start-rules start,start_global,start_class,start_enum --trace --test-file test.as -S start"
-    }
+        "pegjs:compile": "cd language-server/pegjs && peggy angelscript.pegjs --allowed-start-rules start,start_global,start_class,start_enum,start_lambda",
+        "pegjs:test": "cd language-server/pegjs && peggy angelscript.pegjs --allowed-start-rules start,start_global,start_class,start_enum,start_lambda --trace --test-file test.as -S start",
+        "test": "node tests/test_parser.js && node tests/test_manifest.js tests/upstream-package.json && language-server/node_modules/.bin/esbuild tests/test_inheritance.js --bundle --platform=node --outfile=/tmp/soloas-test-inheritance.js && node /tmp/soloas-test-inheritance.js && python3 tests/test_fork.py"
+    },
+    "bugs": {
+        "url": "https://github.com/cuviss-open/soloas-vscode/issues"
+    },
+    "homepage": "https://soloas.cuviss.com"
 }
