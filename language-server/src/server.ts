@@ -77,6 +77,7 @@ let PostProcessTypesQueueIndex = 0;
 let ResolveQueue : Array<scriptfiles.ASModule> = [];
 let ResolveQueueIndex = 0;
 let IsServicingQueues = false;
+let PendingOpenedDocuments = new Set<scriptfiles.ASModule>();
 
 let ReceivingTypesTimeout : any = null;
 let SetTypeTimeout = false;
@@ -531,6 +532,7 @@ function TickQueues()
     else
     {
         IsServicingQueues = false;
+        FlushPendingOpenedDocuments();
         // console.log("Finished servicing queues");
     }
 }
@@ -574,6 +576,7 @@ function ReResolveAllModules()
     let moduleIndex = 0;
     let moduleList = scriptfiles.GetAllLoadedModules();
     let timerHandle = setInterval(ReResolveModules, 1);
+    FlushPendingOpenedDocuments();
 
     function ReResolveModules()
     {
@@ -594,6 +597,20 @@ function ReResolveAllModules()
             moduleIndex += 1;
         }
     }
+}
+
+function FlushPendingOpenedDocuments()
+{
+    if (IsServicingQueues || !CanResolveModules() || ParseQueue.length != 0)
+        return;
+
+    for (let module of PendingOpenedDocuments)
+    {
+        scriptfiles.PostProcessModuleTypes(module);
+        scriptfiles.ResolveModule(module);
+        scriptdiagnostics.UpdateScriptModuleDiagnostics(module, false, true);
+    }
+    PendingOpenedDocuments.clear();
 }
 
 function CanResolveModules()
@@ -1156,15 +1173,20 @@ connection.onDidOpenTextDocument(function (params : DidOpenTextDocumentParams)
     {
         scriptfiles.PostProcessModuleTypes(asmodule);
         scriptfiles.ResolveModule(asmodule);
-        scriptdiagnostics.UpdateScriptModuleDiagnostics(asmodule);
+        scriptdiagnostics.UpdateScriptModuleDiagnostics(asmodule, false, true);
     }
+    else
+        PendingOpenedDocuments.add(asmodule);
 });
 
 connection.onDidCloseTextDocument(function (params : DidCloseTextDocumentParams)
 {
     let asmodule = scriptfiles.GetModuleByUri(params.textDocument.uri);
     if (asmodule)
+    {
         asmodule.isOpened = false;
+        PendingOpenedDocuments.delete(asmodule);
+    }
 });
 
 connection.onDidChangeConfiguration(function (change : DidChangeConfigurationParams)

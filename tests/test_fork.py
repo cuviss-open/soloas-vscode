@@ -35,6 +35,8 @@ void Test(IFoo Captured)
 interface UWrong {}
 '''
 
+finish_types = threading.Event()
+
 def debug_server():
     with socket.socket() as server:
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -44,6 +46,8 @@ def debug_server():
         conn, _ = server.accept()
         with conn:
             conn.recv(4096)
+            if not finish_types.wait(timeout=10):
+                return
             conn.sendall(struct.pack('<IB', 0, 26))
             time.sleep(10)
 
@@ -57,8 +61,9 @@ class ForkLSP(unittest.TestCase):
         cls.uri = (ROOT / 'fork-test.as').as_uri()
         cls.request('initialize', {'processId': os.getpid(), 'rootUri': ROOT.as_uri(), 'rootPath': str(ROOT), 'capabilities': {}, 'workspaceFolders': None})
         cls.notify('initialized', {})
-        time.sleep(2)
         cls.notify('textDocument/didOpen', {'textDocument': {'uri': cls.uri, 'languageId': 'soloas-angelscript', 'version': 1, 'text': SOURCE}})
+        cls.request('textDocument/documentSymbol', {'textDocument': {'uri': cls.uri}})
+        finish_types.set()
         time.sleep(2)
 
     @classmethod
@@ -150,6 +155,15 @@ class ForkLSP(unittest.TestCase):
         character = SOURCE.splitlines()[line].index('Print(Argument)') + len('Print(Arg')
         result = self.request('textDocument/hover', {'textDocument': {'uri': self.uri}, 'position': {'line': line, 'character': character}})
         self.assertIn('int Argument', json.dumps(result))
+
+    def test_reopen_republishes_diagnostics(self):
+        self.request('textDocument/documentSymbol', {'textDocument': {'uri': self.uri}})
+        self.assertTrue(self.diagnostics.get(self.uri))
+        self.notify('textDocument/didClose', {'textDocument': {'uri': self.uri}})
+        self.diagnostics.pop(self.uri, None)
+        self.notify('textDocument/didOpen', {'textDocument': {'uri': self.uri, 'languageId': 'soloas-angelscript', 'version': 1, 'text': SOURCE}})
+        self.request('textDocument/documentSymbol', {'textDocument': {'uri': self.uri}})
+        self.assertTrue(any("Type 'UWrong' violates" in d['message'] for d in self.diagnostics.get(self.uri, [])), self.diagnostics.get(self.uri))
 
     def test_z_incremental_edit(self):
         updated = SOURCE.replace('int Argument', 'int Changed').replace('Print(Argument)', 'Print(Changed)').replace('return Argument', 'return Changed')
