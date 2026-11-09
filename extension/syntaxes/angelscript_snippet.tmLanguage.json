@@ -1,6 +1,6 @@
 {
     "name": "angelscript_snippet",
-    "scopeName": "source.angelscript_snippet",
+    "scopeName": "source.soloas_snippet",
     "patterns": [
         {
             "name": "support.type.component.angelscript",
@@ -73,7 +73,7 @@
             }
         },
         {
-            "include": "source.angelscript"
+            "include": "source.soloas-angelscript"
         }
     ]
 }

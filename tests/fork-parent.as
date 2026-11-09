@@ -1,0 +1,4 @@
+interface IXOutside
+{
+    void External();
+}

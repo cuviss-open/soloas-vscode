@@ -161,7 +161,7 @@ export function ComputeCodeLenses(asmodule : scriptfiles.ASModule) : Array<CodeL
                 range: Range.create(Position.create(lensLine, 0), Position.create(lensLine, 10000)),
                 command: <Command> {
                     title: "Edit "+asset.name+" in Unreal",
-                    command: "angelscript.saveAndEditAsset",
+                    command: "soloas.saveAndEditAsset",
                     arguments: [asmodule.uri, "/Script/AngelscriptAssets."+asset.name],
                 }
             });
@@ -251,7 +251,7 @@ function AddAssetImplementationsLense(scope : scriptfiles.ASScope, dbtype : type
             range: Range.create(Position.create(lensLine, 0), Position.create(lensLine, 10000)),
             command: <Command> {
                 title: message,
-                command: "angelscript.openAssets",
+                command: "soloas.openAssets",
                 arguments: [dbtype.name],
             }
         });
@@ -262,7 +262,7 @@ function AddAssetImplementationsLense(scope : scriptfiles.ASScope, dbtype : type
                 range: Range.create(Position.create(lensLine, 0), Position.create(lensLine, 10000)),
                 command: <Command> {
                     title: "Create Asset",
-                    command: "angelscript.saveAndCreateBlueprint",
+                    command: "soloas.saveAndCreateBlueprint",
                     arguments: [scope.module.uri, dbtype.name],
                 }
             });
@@ -284,7 +284,7 @@ function AddAssetImplementationsLense(scope : scriptfiles.ASScope, dbtype : type
             range: Range.create(Position.create(lensLine, 0), Position.create(lensLine, 10000)),
             command: <Command> {
                 title: message,
-                command: "angelscript.saveAndCreateBlueprint",
+                command: "soloas.saveAndCreateBlueprint",
                 arguments: [scope.module.uri, dbtype.name],
             }
         });

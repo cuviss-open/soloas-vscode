@@ -726,7 +726,7 @@ export class ASDebugSession extends LoggingDebugSession
 
     protected setDataBreakpointsRequest(response: DebugProtocol.SetDataBreakpointsResponse, args: DebugProtocol.SetDataBreakpointsArguments, request?: DebugProtocol.Request): void
     {
-        let dataBreakpointConfig = vscode.workspace.getConfiguration("UnrealAngelscript.dataBreakpoints");
+        let dataBreakpointConfig = vscode.workspace.getConfiguration("SoloAS.dataBreakpoints");
 
         this.dataBreakpoints.clear();
         let responseBreakpoints = new Array<DebugProtocol.Breakpoint>();

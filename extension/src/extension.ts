@@ -22,6 +22,18 @@ const GetAPIDetailsRequest = new RequestType<any, string, void>('angelscript/get
 const GetAPISearchRequest = new RequestType<any, any[], void>('angelscript/getAPISearch');
 
 export function activate(context: ExtensionContext) {
+    if (vscode.extensions.getExtension('Hazelight.unreal-angelscript')
+        && !context.globalState.get<boolean>('upstreamNoticeShown'))
+    {
+        context.globalState.update('upstreamNoticeShown', true);
+        vscode.window.showInformationMessage(
+            'Disable the Hazelight Unreal Angelscript extension when using soloAS. If both are enabled, they can publish duplicate diagnostics.',
+            'Open Hazelight Extension to Disable'
+        ).then(choice => {
+            if (choice)
+                vscode.commands.executeCommand('extension.open', 'Hazelight.unreal-angelscript');
+        });
+    }
 
     // The server is implemented in node
     let serverModule = context.asAbsolutePath(path.join('language-server', 'dist', 'server.js'));
@@ -38,17 +50,17 @@ export function activate(context: ExtensionContext) {
     // Options to control the language client
     let clientOptions: LanguageClientOptions = {
         // Register the server for plain text documents
-        documentSelector: [{scheme: 'file', language: 'angelscript'}],
+        documentSelector: [{scheme: 'file', language: 'soloas-angelscript'}],
         synchronize: {
             fileEvents: workspace.createFileSystemWatcher('**/*.as'),
-            configurationSection: "UnrealAngelscript",
+            configurationSection: "SoloAS",
         }
     }
 
     console.log("Activate angelscript extension");
 
     // Create the language client and start the client.
-    let client = new LanguageClient('angelscriptLanguageServer', 'Angelscript Language Server', serverOptions, clientOptions)
+    let client = new LanguageClient('soloasLanguageServer', 'soloAS Language Server', serverOptions, clientOptions)
     let started_client = client.start();
 
     client.onNotification("angelscript/wantSave", (uri : string) => {
@@ -57,20 +69,20 @@ export function activate(context: ExtensionContext) {
 
     // register a configuration provider for 'mock' debug type
     const provider = new ASConfigurationProvider();
-    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('angelscript', provider));
+    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('soloas', provider));
     context.subscriptions.push(provider);
 
     let evaluatableExpressionProvider = new ASEvaluateableExpressionProvider();
-    context.subscriptions.push(vscode.languages.registerEvaluatableExpressionProvider('angelscript', evaluatableExpressionProvider));
+    context.subscriptions.push(vscode.languages.registerEvaluatableExpressionProvider('soloas-angelscript', evaluatableExpressionProvider));
 
     // Register 'Go To Symbol'
-    let goToSymbol = vscode.commands.registerCommand('angelscript.goToSymbol', (location : any) => {
+    let goToSymbol = vscode.commands.registerCommand('soloas.goToSymbol', (location : any) => {
         vscode.commands.executeCommand("editor.action.goToImplementation", location);
     });
 
     context.subscriptions.push(goToSymbol);
 
-    let completionParen = vscode.commands.registerCommand('angelscript.paren', () =>
+    let completionParen = vscode.commands.registerCommand('soloas.paren', () =>
     {
         let activeEditor = vscode.window.activeTextEditor;
         if (activeEditor != null)
@@ -102,7 +114,7 @@ export function activate(context: ExtensionContext) {
             }
             else if (char_number >= text_line.text.length || text_line.text[char_number] != '(')
             {
-                let parenConfig = vscode.workspace.getConfiguration("UnrealAngelscript");
+                let parenConfig = vscode.workspace.getConfiguration("SoloAS");
                 if (!parenConfig.get("insertParenthesisOnFunctionCompletion"))
                     return;
 
@@ -123,7 +135,7 @@ export function activate(context: ExtensionContext) {
     });
     context.subscriptions.push(completionParen);
 
-    let saveAndCreateBlueprint = vscode.commands.registerCommand('angelscript.saveAndCreateBlueprint',
+    let saveAndCreateBlueprint = vscode.commands.registerCommand('soloas.saveAndCreateBlueprint',
         function(uri : string, className : string)
         {
             let activeEditor = vscode.window.activeTextEditor;
@@ -136,20 +148,20 @@ export function activate(context: ExtensionContext) {
                         {
                             setTimeout(function()
                             {
-                                vscode.commands.executeCommand('angelscript.createBlueprint', className);
+                                vscode.commands.executeCommand('soloas.createBlueprint', className);
                             }, 300);
                         }
                     );
                 }
                 else
                 {
-                    vscode.commands.executeCommand('angelscript.createBlueprint', className);
+                    vscode.commands.executeCommand('soloas.createBlueprint', className);
                 }
             }
         });
     context.subscriptions.push(saveAndCreateBlueprint);
 
-    let saveAndEditAsset = vscode.commands.registerCommand('angelscript.saveAndEditAsset',
+    let saveAndEditAsset = vscode.commands.registerCommand('soloas.saveAndEditAsset',
         function(uri : string, assetPath : string)
         {
             let activeEditor = vscode.window.activeTextEditor;
@@ -162,20 +174,20 @@ export function activate(context: ExtensionContext) {
                         {
                             setTimeout(function()
                             {
-                                vscode.commands.executeCommand('angelscript.editAsset', assetPath);
+                                vscode.commands.executeCommand('soloas.editAsset', assetPath);
                             }, 300);
                         }
                     );
                 }
                 else
                 {
-                    vscode.commands.executeCommand('angelscript.editAsset', assetPath);
+                    vscode.commands.executeCommand('soloas.editAsset', assetPath);
                 }
             }
         });
     context.subscriptions.push(saveAndEditAsset);
 
-    let stopPIE = vscode.commands.registerCommand('angelscript.debugStopPIE',
+    let stopPIE = vscode.commands.registerCommand('soloas.debugStopPIE',
         function()
         {
             if (vscode.debug.activeDebugSession)
@@ -191,10 +203,10 @@ export function activate(context: ExtensionContext) {
 
     apiSearch.tree = apiTree;
 
-    vscode.window.registerTreeDataProvider("angelscript-api-list", apiTree);
-    vscode.window.registerWebviewViewProvider("angelscript-api-search", apiSearch);
-    vscode.window.registerWebviewViewProvider("angelscript-api-details", apiDetails);
-    vscode.commands.registerCommand("angelscript-api-list.view-details", function (data : any)
+    vscode.window.registerTreeDataProvider("soloas-api-list", apiTree);
+    vscode.window.registerWebviewViewProvider("soloas-api-search", apiSearch);
+    vscode.window.registerWebviewViewProvider("soloas-api-details", apiDetails);
+    vscode.commands.registerCommand("soloas-api-list.view-details", function (data : any)
     {
         apiDetails.showDetails(data);
     });
@@ -367,7 +379,7 @@ class ASApiTreeProvider implements vscode.TreeDataProvider<ASApiItem>
                         item.type = api.type;
                         item.command = {
                             "title": "View Details",
-                            "command": "angelscript-api-list.view-details",
+                            "command": "soloas-api-list.view-details",
                             "arguments": [api.data],
                         };
                         item.iconPath = new vscode.ThemeIcon("symbol-function", new vscode.ThemeColor("terminal.ansiBrightYellow"));
@@ -381,7 +393,7 @@ class ASApiTreeProvider implements vscode.TreeDataProvider<ASApiItem>
                         item.type = api.type;
                         item.command = {
                             "title": "View Details",
-                            "command": "angelscript-api-list.view-details",
+                            "command": "soloas-api-list.view-details",
                             "arguments": [api.data],
                         };
                         item.iconPath = new vscode.ThemeIcon("symbol-field", new vscode.ThemeColor("terminal.ansiBrightCyan"));
@@ -428,9 +440,9 @@ class ASConfigurationProvider implements vscode.DebugConfigurationProvider {
         if (!config.type && !config.request && !config.name)
         {
             const editor = vscode.window.activeTextEditor;
-            if (editor && editor.document.languageId === 'angelscript' )
+            if (editor && editor.document.languageId === 'soloas-angelscript' )
             {
-                config.type = 'angelscript';
+                config.type = 'soloas';
                 config.name = 'Debug Angelscript';
                 config.request = 'launch';
                 config.stopOnEntry = true;
@@ -456,7 +468,7 @@ class ASConfigurationProvider implements vscode.DebugConfigurationProvider {
                 else
                 {
                     // Get the port from the workspace configuration
-                    session.port = vscode.workspace.getConfiguration("UnrealAngelscript").get("unrealConnectionPort");
+                    session.port = vscode.workspace.getConfiguration("SoloAS").get("unrealConnectionPort");
                 }
 
                 if (hostname !== undefined)

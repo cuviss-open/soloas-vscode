@@ -609,7 +609,7 @@ function GetHoverForType(hoveredType : typedb.DBType) : Hover
 
     let hover = "";
     hover += FormatHoverDocumentation(hoveredType.documentation);
-    hover += "```angelscript_snippet\n";
+    hover += "```soloas_snippet\n";
     if (hoveredType.isEnum)
     {
         hover += "enum "+hoveredType.name;
@@ -634,16 +634,17 @@ function GetHoverForType(hoveredType : typedb.DBType) : Hover
     }
     else
     {
-        if (hoveredType.isStruct)
+        if (hoveredType.isInterface)
+            hover += "interface ";
+        else if (hoveredType.isStruct)
             hover += "struct ";
         else
             hover += "class ";
 
         hover += hoveredType.name;
-        if (hoveredType.supertype)
-            hover += " : "+hoveredType.supertype;
-        else if (hoveredType.unrealsuper)
-            hover += " : "+hoveredType.unrealsuper;
+        let parents = [hoveredType.supertype || hoveredType.unrealsuper, ...hoveredType.interfaces].filter(Boolean);
+        if (parents.length)
+            hover += " : "+parents.join(", ");
     }
 
     hover += "\n```";
@@ -657,7 +658,7 @@ function GetHoverForNamespace(hoveredNamespace : typedb.DBNamespace) : Hover
 {
     let hover = "";
     hover += FormatHoverDocumentation(hoveredNamespace.documentation);
-    hover += "```angelscript_snippet\n";
+    hover += "```soloas_snippet\n";
     hover += "namespace "+hoveredNamespace.name;
 
     hover += "\n```";
@@ -673,7 +674,7 @@ function GetHoverForLocalVariable(scope : scriptfiles.ASScope, asvar : scriptfil
     if(asvar.documentation)
         hover += FormatHoverDocumentation(asvar.documentation);
 
-    hover += "```angelscript_snippet\n"+asvar.typename+" "+asvar.name+"\n```";
+    hover += "```soloas_snippet\n"+asvar.typename+" "+asvar.name+"\n```";
     return <Hover> {contents: <MarkupContent> {
         kind: "markdown",
         value: hover,
@@ -691,7 +692,7 @@ function GetHoverForProperty(type : typedb.DBType | typedb.DBNamespace, prop : t
 
     let hover = "";
     hover += FormatPropertyDocumentation(prop.documentation);
-    hover += "```angelscript_snippet\n"+prop.format(prefix)+"\n```";
+    hover += "```soloas_snippet\n"+prop.format(prefix)+"\n```";
 
     return <Hover> {contents: <MarkupContent> {
         kind: "markdown",
@@ -731,13 +732,13 @@ function GetHoverForFunction(asmodule : scriptfiles.ASModule, offset : number, t
     if (isAccessor)
     {
         if (func.name.startsWith("Get"))
-            hover += "```angelscript_snippet\n"+func.returnType+" "+prefix+func.name.substring(3)+"\n```";
+            hover += "```soloas_snippet\n"+func.returnType+" "+prefix+func.name.substring(3)+"\n```";
         else if (func.args && func.args.length > 0)
-            hover += "```angelscript_snippet\n"+func.args[0].typename+" "+prefix+func.name.substring(3)+"\n```";
+            hover += "```soloas_snippet\n"+func.args[0].typename+" "+prefix+func.name.substring(3)+"\n```";
     }
     else
     {
-        hover += "```angelscript_snippet\n"+func.format(prefix, func.isMixin, false, null, determineType)+suffix+"\n```";
+        hover += "```soloas_snippet\n"+func.format(prefix, func.isMixin, false, null, determineType)+suffix+"\n```";
     }
 
     return <Hover> {contents: <MarkupContent> {
@@ -795,7 +796,7 @@ function AddScopeSymbols(asmodule : scriptfiles.ASModule, scope : scriptfiles.AS
                 }
                 else
                 {
-                    scopeSymbol.kind = SymbolKind.Class;
+                    scopeSymbol.kind = dbtype.isInterface ? SymbolKind.Interface : SymbolKind.Class;
                     if (dbtype.isStruct)
                         scopeSymbol.kind = SymbolKind.Struct;
                 }

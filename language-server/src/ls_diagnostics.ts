@@ -641,6 +641,17 @@ function AddScopeNamingConventionDiagnostics(scope : scriptfiles.ASScope, diagno
                 hasSuggestion = true;
             }
         }
+        else if (scopeType.isInterface)
+        {
+            if (suggestedName.length >= 1 && suggestedName[0] != 'I')
+            {
+                if (suggestedName[0] == 'U' || suggestedName[0] == 'A' || suggestedName[0] == 'F' || suggestedName[0] == 'E')
+                    suggestedName = "I"+suggestedName.substring(1);
+                else
+                    suggestedName = "I"+suggestedName;
+                hasSuggestion = true;
+            }
+        }
         else if (scopeType.isStruct)
         {
             if (suggestedName.length >= 1 && suggestedName[0] != 'F')

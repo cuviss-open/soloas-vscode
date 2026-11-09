@@ -397,7 +397,7 @@ connection.onInitialize((_params): InitializeResult => {
                 resolveProvider: false
             },
             executeCommandProvider: {
-                commands: ["angelscript.openAssets", "angelscript.createBlueprint", "angelscript.editAsset"],
+                commands: ["soloas.openAssets", "soloas.createBlueprint", "soloas.editAsset"],
             },
             codeActionProvider: {
                 resolveProvider: true,
@@ -836,7 +836,7 @@ connection.onCodeLensResolve(function (lens : CodeLens) : CodeLens{
 
 connection.onExecuteCommand(function (params : ExecuteCommandParams)
 {
-    if (params.command == "angelscript.openAssets")
+    if (params.command == "soloas.openAssets")
     {
         if (params.arguments && params.arguments[0])
         {
@@ -853,7 +853,7 @@ connection.onExecuteCommand(function (params : ExecuteCommandParams)
                 connection.window.showErrorMessage("Cannot open asset: not connected to unreal editor.");
         }
     }
-    else if (params.command == "angelscript.editAsset")
+    else if (params.command == "soloas.editAsset")
     {
         if (params.arguments && params.arguments[0])
         {
@@ -864,7 +864,7 @@ connection.onExecuteCommand(function (params : ExecuteCommandParams)
                 connection.window.showErrorMessage("Cannot edit asset: not connected to unreal editor.");
         }
     }
-    else if (params.command == "angelscript.createBlueprint")
+    else if (params.command == "soloas.createBlueprint")
     {
         if (params.arguments && params.arguments[0])
         {
@@ -1170,7 +1170,7 @@ connection.onDidCloseTextDocument(function (params : DidCloseTextDocumentParams)
 connection.onDidChangeConfiguration(function (change : DidChangeConfigurationParams)
 {
     let settingsObject = change.settings as any;
-    settings = settingsObject.UnrealAngelscript;
+    settings = settingsObject.SoloAS;
     if (!settings)
         return;
 

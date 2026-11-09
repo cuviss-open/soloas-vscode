@@ -134,7 +134,7 @@ export function GetAPIDetails(data : any) : any
         if (!method)
             return ""
 
-        let details = "```angelscript_snippet\n";
+        let details = "```soloas_snippet\n";
         details += method.returnType;
         details += " ";
         if (method.containingType)
@@ -189,7 +189,7 @@ export function GetAPIDetails(data : any) : any
         {
             if (symbol instanceof typedb.DBProperty)
             {
-                let details = "```angelscript_snippet\n"+symbol.format(
+                let details = "```soloas_snippet\n"+symbol.format(
                     symbol.namespace.getQualifiedNamespace()+"::"
                 )+"\n```\n";
                 details += documentation.FormatPropertyDocumentation(symbol.documentation);
@@ -208,7 +208,7 @@ export function GetAPIDetails(data : any) : any
         {
             if (symbol instanceof typedb.DBProperty)
             {
-                let details = "```angelscript_snippet\n"+symbol.format(
+                let details = "```soloas_snippet\n"+symbol.format(
                     symbol.containingType.getQualifiedTypenameInNamespace(null)+"."
                 )+"\n```\n";
                 details += documentation.FormatPropertyDocumentation(symbol.documentation);
