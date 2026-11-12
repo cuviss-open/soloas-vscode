@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0
+
+- 与 soloAS 0.3.0 版本同步，扩展功能无变化。
+- Synchronized with soloAS 0.3.0; no extension functionality changes.
+
 ## 0.2.1
 
 - Support the new CoreExtensions interface and lambda syntax.
